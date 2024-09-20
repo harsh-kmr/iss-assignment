@@ -65,7 +65,8 @@ public:
     }
 };
 
-
+map<int, vector<string>> productHashtags;
+bool intialized = false;
 
 //////////////////////////////////////////////////////////////////////////////////
 // MODIFY THIS SECTION
@@ -80,10 +81,14 @@ public:
  */
 void groupCustomersByHashtags(fileIterator& hashtags, fileIterator& purchases,fileIterator& prices, int k, string outputFilePath)
 {
+    //log the memory usage
+    cout << "Peak Memory Usage: ";
+    printPeakMemoryUsage();
     //Use this to log compute time    
     auto start = high_resolution_clock::now();
     //  Write your code here
-    map<int, vector<string>> productHashtags;
+    //map<int, vector<string>> productHashtags;
+    map<int, WeightedOrder> consumerOrders;
     while(hashtags.hasNext()) {
         string line = hashtags.next();
         if (line.empty()) continue;
@@ -104,11 +109,14 @@ void groupCustomersByHashtags(fileIterator& hashtags, fileIterator& purchases,fi
         }
         
         for (int i = 1; i < tokens.size(); i++) {
-            productHashtags[productId].push_back(tokens[i]);
+            // check for duplicate hashtags before adding
+            if (find(productHashtags[productId].begin(), productHashtags[productId].end(), tokens[i]) == productHashtags[productId].end()) {
+                productHashtags[productId].push_back(tokens[i]);
+            }
         }
     }
 
-    map<int, WeightedOrder> consumerOrders;
+    //map<int, WeightedOrder> consumerOrders;
     while (purchases.hasNext()) {
         string line = purchases.next();
         if (line.empty()) continue;
@@ -129,10 +137,15 @@ void groupCustomersByHashtags(fileIterator& hashtags, fileIterator& purchases,fi
             }
         }
     }
+    
+    intialized = true;
+
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(stop - start);
-    cout << "Time taken by compute part of the function: "<< duration.count() << " microseconds" << endl;
-
+    cout << "Time taken by compute part of the function groupCustomersByHashtags: "<< duration.count() << " microseconds" << endl;
+    //log the memory usage
+    cout << "Peak Memory Usage: ";
+    printPeakMemoryUsage();
     // Use the below utility function to write the output to a file
     // Call this function for every group as a vector of integers
     /*vector<int> group;
@@ -160,6 +173,9 @@ void groupCustomersByHashtags(fileIterator& hashtags, fileIterator& purchases,fi
  * @param prices
  */
 float calculateGroupAverageExpense(vector<int> customerList, fileIterator& purchases,fileIterator& prices){
+    //log the memory usage
+    cout << "Peak Memory Usage: ";
+    printPeakMemoryUsage();
     //Use this to log compute time    
     auto start = high_resolution_clock::now();
     //  Write your code here
@@ -213,8 +229,10 @@ float calculateGroupAverageExpense(vector<int> customerList, fileIterator& purch
     }
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(stop - start);
-    cout << "Time taken by this function: "<< duration.count() << " microseconds" << endl;
-
+    cout << "Time taken by calculateGroupAverageExpense function: "<< duration.count() << " microseconds" << endl;
+    //log the memory usage
+    cout << "Peak Memory Usage: ";
+    printPeakMemoryUsage();
     return float(totalExpense / customerList.size());
 }
 
@@ -235,28 +253,33 @@ float calculateGroupAverageExpense(vector<int> customerList, fileIterator& purch
  * @param outputFilePath
  */
 void groupCustomersByHashtagsForDynamicInserts(fileIterator& hashtags, fileIterator& purchases, fileIterator& prices, vector<string> newHashtags, int k, string outputFilePath) {
+    //log the memory usage
+    cout << "Peak Memory Usage: ";
+    printPeakMemoryUsage();
+
     // Use this to log compute time    
     auto start = high_resolution_clock::now();
 
     // Write your code here
-    map<int, vector<string>> productHashtags;
+    //process existing hashtags if not initialized
     map<int, WeightedOrder> consumerOrders;
 
-    // Process existing hashtags
-    while (hashtags.hasNext()) {
-        string line = hashtags.next();
-        if (line.empty()) continue;
-        
-        stringstream ss(line);
-        string token;
-        vector<string> tokens;
-        while (getline(ss, token, ',')) {
-            tokens.push_back(token);
-        }
-        
-        int productId = stoi(tokens[0]);
-        for (size_t i = 1; i < tokens.size(); i++) {
-            productHashtags[productId].push_back(tokens[i]);
+    if (!intialized) {
+        while (hashtags.hasNext()) {
+            string line = hashtags.next();
+            if (line.empty()) continue;
+            
+            stringstream ss(line);
+            string token;
+            vector<string> tokens;
+            while (getline(ss, token, ',')) {
+                tokens.push_back(token);
+            }
+            
+            int productId = stoi(tokens[0]);
+            for (size_t i = 1; i < tokens.size(); i++) {
+                productHashtags[productId].push_back(tokens[i]);
+            }
         }
     }
 
@@ -271,7 +294,9 @@ void groupCustomersByHashtagsForDynamicInserts(fileIterator& hashtags, fileItera
         
         int productId = stoi(tokens[0]);
         for (size_t i = 1; i < tokens.size(); i++) {
-            productHashtags[productId].push_back(tokens[i]);
+            if (find(productHashtags[productId].begin(), productHashtags[productId].end(), tokens[i]) == productHashtags[productId].end()) {
+                productHashtags[productId].push_back(tokens[i]);
+            }
         }
     }
 
@@ -299,8 +324,11 @@ void groupCustomersByHashtagsForDynamicInserts(fileIterator& hashtags, fileItera
 
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(stop - start);
-    cout << "Time taken by compute part of the function: " << duration.count() << " microseconds" << endl;
-
+    cout << "Time taken by compute part of the function groupCustomersByHashtagsForDynamicInserts: " << duration.count() << " microseconds" << endl;
+    //log the memory usage
+    cout << "Peak Memory Usage: ";
+    printPeakMemoryUsage();
+    
     // Group customers by their top k hashtags
     map<string, vector<int>> groups;
     for (const auto& [consumerId, weightedOrder] : consumerOrders) {

@@ -5,8 +5,16 @@
 #include <chrono>
 #include <sstream>
 #include "user_code.h"
+#include <sys/resource.h>
+
 using namespace std;
 using namespace std::chrono;
+
+void printPeakMemoryUsage() {
+    struct rusage usage;
+    getrusage(RUSAGE_SELF, &usage);  // Get resource usage of the calling process
+    std::cout << "Peak memory usage: " << usage.ru_maxrss << " KB" << std::endl;
+}
 
 /**
  * @brief Do not modify this code.
@@ -26,8 +34,8 @@ void question1(string hashtagsPath, string purchasesPath, string pricesPath, int
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(stop - start);
     auto computeDuration = duration.count() - fileIo;
-    cout << "Time taken by function: " << duration.count() << " microseconds" << endl;
-    cout << "Total time taken: " << computeDuration << " microseconds" << endl;
+    cout << "Time taken by function groupCustomersByHashtags : " << duration.count() << " microseconds" << endl;
+    cout << "Total time taken groupCustomersByHashtags : " << computeDuration << " microseconds" << endl;
 
     hashtags.reset();
     purchases.reset();
@@ -182,7 +190,7 @@ int main(int argc, char **argv)
     string outputPath3 = argv[7]; //  Folder path for output files
     string newHashtagPath = argv[8];
 
-    int k = 2; // Q1
+    int k = 20000; // Q1
     question1(hashtagsPath, purchasesPath, pricesPath, k, outputPath);
 
     question2(purchasesPath, pricesPath, groupsPath, outputPath2);
